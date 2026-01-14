@@ -18,10 +18,12 @@ ENV/
 *.swp
 *.swo
 /Instructions
-[PRODUCTIONS]/
+
+# [PRODUCTIONS] directory - escape brackets with backslashes
+\[PRODUCTIONS\]/
 
 # Output files - ignore all generated triples
-[PRODUCTIONS]/**/*.ttl
+\[PRODUCTIONS\]/**/*.ttl
 
 # OS
 .DS_Store
