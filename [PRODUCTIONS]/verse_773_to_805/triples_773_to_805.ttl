@@ -1,0 +1,74 @@
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Creon a :Character .
+:Antigone a :Character .
+:Chorus a :Character .
+:Hades a :Character .
+:Aphrodite a :Character .
+:Eros a :Character .
+
+:CreonMotivation1 a :Motivation ;
+  :description "To lead Antigone along a deserted path and seal her alive in a rocky cavern, leaving only minimal food." .
+
+:Creon hasMotivation :CreonMotivation1 .
+
+:CreonMotivation2 a :Motivation ;
+  :description "To clear the city's name of the charge of murder by providing only as much food as necessary." .
+
+:Creon hasMotivation :CreonMotivation2 .
+
+:CreonDecision1 a :MoralDecision ;
+  :description "Impose entombment in a rocky cavern with minimal food, framed as avoiding the city's guilt for murder." .
+
+:Creon makesMoralDecision :CreonDecision1 .
+
+:AntigoneMotivation1 a :Motivation ;
+  :description "She cares for (reveres) Hades as the only god she honors." .
+
+:Antigone hasMotivation :AntigoneMotivation1 .
+
+:AntigoneMotivation2 a :Motivation ;
+  :description "In the cave she will beg Hades not to let her die." .
+
+:Antigone hasMotivation :AntigoneMotivation2 .
+
+:ChorusEmotion1 a :Emotion ;
+  :description "Overwhelmed by tears at the sight of Antigone proceeding to her final place of rest." .
+
+:Chorus experiencesEmotion :ChorusEmotion1 .
+
+:ChorusEmotion2 a :Emotion ;
+  :description "Feels compelled to transgress justice when witnessing Antigone's fate." .
+
+:Chorus experiencesEmotion :ChorusEmotion2 .
+
+:ErosTheme1 a :Theme ;
+  :description "Eros (desire) is unvanquished, drives mortals mad, and leads even the just astray; desire prevails under divine law, with Aphrodite at play." .
+
+:Chorus developsTheme :ErosTheme1 .
+
+:JusticeConflict1 a :Conflict ;
+  :description "The Chorus is forced to transgress justice due to grief and the power of desire while witnessing Antigone's march to death." .
+
+:JusticeConflict1 :conflictBetween :Chorus ;
+  :conflictBetween :ErosTheme1 .
+
+:CreonDecision1 :relatedTo :CreonMotivation2 .
+
+:CreonMotivation1 :relatedTo :CreonDecision1 .
+
+:AntigoneMotivation2 :relatedTo :CreonDecision1 .
+
+:ChorusEmotion1 :relatedTo :CreonDecision1 .
+
+:ChorusEmotion2 :relatedTo :ChorusEmotion1 .
+
+:HadesWorshipPainTheme1 a :Theme ;
+  :description "Worshipping the god of death brings excessive pain, realized in extremity." .
+
+:Creon developsTheme :HadesWorshipPainTheme1 .
+
+:HadesWorshipPainTheme1 :relatedTo :AntigoneMotivation1 .
