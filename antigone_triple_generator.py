@@ -135,8 +135,9 @@ class VerseRangeProcessor:
         Returns:
             Complete prompt string
         """
-        # Combine texts - you may want to adjust this format
-        combined_text = f"{english_text}\n\n[Ancient Greek]\n{ancient_greek_text}"
+        # Combine texts - Ancient Greek first (canonical anchor), then English translation
+        # This order emphasizes that Ancient Greek is the canonical anchor
+        combined_text = f"[Ancient Greek - CANONICAL ANCHOR]\n{ancient_greek_text}\n\n[English Translation]\n{english_text}"
         
         # Build the complete prompt: template + ontology + demo + text
         prompt = self.prompt_template.replace('{{ INSERT PASSAGE HERE }}', combined_text)
