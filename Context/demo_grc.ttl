@@ -1,0 +1,101 @@
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+
+# GLOBAL EXTRACTION RULES (MUST FOLLOW):
+#
+# 1 Ancient Greek is the canonical anchor.
+#    - Canonical identifiers (:Scene, :Speech, :Line_###, :Character) are defined ONCE.
+#
+# 2 For translations (Modern Greek / English):
+#    - DO NOT create or redefine any:
+#        :Scene, :Speech, :Character, or canonical :Line_### individuals.
+#    - ONLY create :TranslationVariant individuals (TV_*).
+#    - Link each TranslationVariant to the canonical :Line_### using :relatedTo.
+#
+# 3 Do NOT invent structure.
+#    - Reuse URIs exactly as given in the input.
+#    - If a canonical URI is missing, skip it (do not guess).
+#
+# 4 Use ONLY classes and properties declared in the ontology (You are provided the Antigone-Ontology.ttl file)
+#    - If no specific property exists, use :relatedTo or omit the assertion.
+#
+# 5 STRUCTURAL AUTHORITY RULE (extract if present, do not assume):
+#    - You MAY extract Scene types (e.g., :Prologue, :Episode, :Stasimon, :Exodus),
+#      line numbers, and canonical references ONLY when they are explicitly present
+#      in the input image/text/metadata OR when they can be derived from explicit
+#      rules provided in this prompt (e.g., a numbered transcription).
+#    - If required information is missing, omit the corresponding triples rather than inventing them.
+#  
+#
+# 6 No blank nodes. No duplicate individuals.
+# If you seem to have conflicts/complications , mention them with at the end of the file with # REPORT and list them.
+
+# 7 - VERSE SPLITTING POLICY:
+# Even when verses are visually wrapped or merged in the source text,
+# each canonical line number MUST be represented as a distinct :Line_### individual.
+# Visual layout and metrical labels are non-authoritative.
+# If a line appears to be split or merged, Mention it at the end of the file with # REPORT and list them. 
+
+
+# MULTI-EXTRACTOR SAFETY RULES:
+#
+# - Each file is append-only.
+# - Never redefine an individual already present in the input.
+# - Canonical files (Ancient Greek) may define :Line_### once.
+# - Translation files may define ONLY :TranslationVariant individuals.
+# - Naming conventions:
+#     Canonical lines: :Line_###
+#     Modern Greek:   :TV_Line_###_ell
+#     English:        :TV_Line_###_en
+#
+# - If a TranslationVariant already exists, do NOT recreate it.
+# - If unsure, omit the assertion rather than inventing it.
+#
+# - At the end of output, include a short REPORT comment:
+#     # REPORT: Produced TranslationVariants for lines X–Y. Skipped Z (missing anchors).
+
+
+############################
+# SCENE → SPEECH → LINE (STRICT FLOW)
+############################
+
+:Antigone_Scene_Prologue
+  a owl:NamedIndividual, :Scene, :Prologue ;
+  :sceneNumber "Prologue"^^xsd:string ;
+  :hasSpeech :Speech_Antigone_001 ;
+  :developsTheme :Theme_FamilyBond .
+
+:Speech_Antigone_001
+  a owl:NamedIndividual, :Speech ;
+  :speechBy :Antigone_Character_Antigone ;
+  :containsLine :Line_001 .
+
+:Antigone_Character_Antigone
+  a owl:NamedIndividual, :Character ;
+  :experiencesEmotion :Emotion_TenderAffection .
+
+############################
+# CANONICAL LINE (Ancient Greek MASTER)
+############################
+
+:Line_001
+  a owl:NamedIndividual, :Line ;
+  :lineNumber 1 ;
+  :canonicalReference "Prologue.1"^^xsd:string ;
+  :text "Ὦ κοινὸν αὐτάδελφον Ἰσμήνης κάρα"^^xsd:string .
+
+############################
+# CONCEPT INDIVIDUALS
+############################
+
+:Theme_FamilyBond
+  a :Theme ;
+  :description "Sisterhood bond foregrounded."^^xsd:string .
+
+:Emotion_TenderAffection
+  a :Emotion ;
+  :description "Tender affection."^^xsd:string .
+
+  #REPORT: No conflicts detected. No verse splitting issues identified.

@@ -22,17 +22,21 @@ load_dotenv()
 class VerseRangeProcessor:
     """Main processor for verse ranges and triple generation."""
     
-    def __init__(self, productions_dir: str, prompt_template_path: str, api_key: Optional[str] = None):
+    def __init__(self, productions_dir: str, prompt_template_path: str, ontology_path: Optional[str] = None, demo_path: Optional[str] = None, api_key: Optional[str] = None):
         """
         Initialize the processor.
         
         Args:
             productions_dir: Path to the [PRODUCTIONS] directory
-            prompt_template_path: Path to the prompt template file
+            prompt_template_path: Path to the prompt template file (default: Context/Prompt.txt)
+            ontology_path: Path to the ontology file (default: Context/Ontology.ttl)
+            demo_path: Path to the demo example file (default: Context/demo_grc.ttl)
             api_key: OpenAI API key (if None, reads from OPENAI_API_KEY env var)
         """
         self.productions_dir = Path(productions_dir)
-        self.prompt_template_path = Path(prompt_template_path)
+        self.prompt_template_path = Path(prompt_template_path) if prompt_template_path else Path('Context/Prompt.txt')
+        self.ontology_path = Path(ontology_path) if ontology_path else Path('Context/Ontology.ttl')
+        self.demo_path = Path(demo_path) if demo_path else Path('Context/demo_grc.ttl')
         self.api_key = api_key or os.getenv('OPENAI_API_KEY')
         
         if not self.api_key:
@@ -40,6 +44,8 @@ class VerseRangeProcessor:
         
         self.client = OpenAI(api_key=self.api_key)
         self.prompt_template = self._load_prompt_template()
+        self.ontology_content = self._load_ontology()
+        self.demo_content = self._load_demo()
     
     def _load_prompt_template(self) -> str:
         """Load the prompt template from file."""
@@ -48,6 +54,22 @@ class VerseRangeProcessor:
                 return f.read()
         except FileNotFoundError:
             raise FileNotFoundError(f"Prompt template not found: {self.prompt_template_path}")
+    
+    def _load_ontology(self) -> str:
+        """Load the ontology file."""
+        try:
+            with open(self.ontology_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Ontology file not found: {self.ontology_path}")
+    
+    def _load_demo(self) -> str:
+        """Load the demo example file."""
+        try:
+            with open(self.demo_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Demo file not found: {self.demo_path}")
     
     def find_verse_ranges(self) -> List[str]:
         """
@@ -104,7 +126,7 @@ class VerseRangeProcessor:
     
     def build_prompt(self, ancient_greek_text: str, english_text: str) -> str:
         """
-        Build the prompt by inserting the verse texts into the template.
+        Build the prompt by inserting the verse texts, ontology, and demo example into the template.
         
         Args:
             ancient_greek_text: Ancient Greek text
@@ -116,8 +138,19 @@ class VerseRangeProcessor:
         # Combine texts - you may want to adjust this format
         combined_text = f"{english_text}\n\n[Ancient Greek]\n{ancient_greek_text}"
         
-        # Replace the placeholder in the template
+        # Build the complete prompt: template + ontology + demo + text
         prompt = self.prompt_template.replace('{{ INSERT PASSAGE HERE }}', combined_text)
+        
+        # Insert ontology and demo before the text section
+        # Find where to insert (before <TEXT> tag)
+        if '<TEXT>' in prompt:
+            # Insert ontology and demo right before <TEXT>
+            ontology_section = f"\n\n<ONTOLOGY>\n{self.ontology_content}\n</ONTOLOGY>\n\n"
+            demo_section = f"<EXAMPLE>\n{self.demo_content}\n</EXAMPLE>\n\n"
+            prompt = prompt.replace('<TEXT>', ontology_section + demo_section + '<TEXT>')
+        else:
+            # Fallback: append ontology and demo at the end before the text
+            prompt = f"{prompt}\n\n<ONTOLOGY>\n{self.ontology_content}\n</ONTOLOGY>\n\n<EXAMPLE>\n{self.demo_content}\n</EXAMPLE>\n"
         
         return prompt
     
@@ -315,8 +348,20 @@ def main():
     parser.add_argument(
         '--prompt-template',
         type=str,
-        default='Prompt.txt',
-        help='Path to the prompt template file (default: Prompt.txt)'
+        default='Context/Prompt.txt',
+        help='Path to the prompt template file (default: Context/Prompt.txt)'
+    )
+    parser.add_argument(
+        '--ontology',
+        type=str,
+        default='Context/Ontology.ttl',
+        help='Path to the ontology file (default: Context/Ontology.ttl)'
+    )
+    parser.add_argument(
+        '--demo',
+        type=str,
+        default='Context/demo_grc.ttl',
+        help='Path to the demo example file (default: Context/demo_grc.ttl)'
     )
     parser.add_argument(
         '--api-key',
@@ -360,6 +405,8 @@ def main():
         processor = VerseRangeProcessor(
             args.productions_dir,
             args.prompt_template,
+            args.ontology,
+            args.demo,
             args.api_key
         )
         

@@ -1,0 +1,63 @@
+You are an expert annotator of Ancient Greek tragedies and an ontology-aware triple extractor. Your task is to read the passage between <TEXT> and </TEXT> and output ONLY valid RDF/Turtle triples that follow exactly the Antigone Ontology provided. Every triple must use individuals created under the prefix ":" and must use only the classes and properties already defined in the ontology. Do not invent new properties.
+
+Your extraction task covers six types of high-level semantic information: intentions and objectives, moral justifications, emotional states, semantic contradictions, causal relationships, and thematic signals. For each case, you must represent the information using the ontology classes and object/datatype properties exactly as defined.
+
+Instructions for each category:
+
+1. Intentions and Objectives: Represent intentions by creating an individual of class :Motivation. Link characters to motivations using :hasMotivation. If the intention involves a deliberate choice, also create a :MoralDecision individual and connect the character using :makesMoralDecision. Provide a short description of the motivation or decision using :description.
+
+2. Moral Justifications: Represent moral justifications through :EthicalPrinciple or :MoralDecision instances. Link characters to the principle they uphold using :advocatesFor. Provide a description of the principle or reasoning using :description.
+
+3. Emotional States: Create an individual of class :Emotion and link it to the character using :experiencesEmotion. Include a :description explaining the emotion.
+
+4. Semantic Contradictions: Represent contradictions as instances of :Conflict. Connect this conflict to the relevant characters, principles, or laws using :conflictBetween. CRITICAL: :conflictBetween can ONLY connect to :Character, :EthicalPrinciple, :Law, or :FateConcept - NEVER to :Theme or any other class. IMPORTANT: Every conflict MUST have at least TWO participants via :conflictBetween (conflicts represent opposition between entities). If your conflict description mentions entities (e.g., "Eros vs Justice", "Desire vs Law"), ensure ALL opposing entities mentioned are represented as participants. If an entity mentioned in the description cannot be represented as a :Character, :EthicalPrinciple, :Law, or :FateConcept, consider whether the conflict can be restructured or if additional individuals need to be created. Optionally link the containing scene, speech, or play using :hasConflict.
+
+5. Causal Relationships: Use the generic property :relatedTo to represent causal or consequential links between events, actions, or decisions. You may create individuals of type :MoralDecision, :Motivation, or generic owl:Thing to represent the events being related. Add a :description when necessary.
+
+6. Thematic Signals: Represent themes as individuals of class :Theme. CRITICAL: :hasTheme and :developsTheme can ONLY be used on structural elements (:Play, :Scene, :Speech, :Line, :Performance, :Adaptation), NEVER on :Character, :MoralDecision, :Motivation, or any other non-structural class. If no Scene/Speech/Line anchors are provided in the passage, DO NOT use :hasTheme or :developsTheme - instead use :relatedTo to link themes to characters, decisions, motivations, or other concepts. Provide a :description summarizing the thematic idea.
+
+CRITICAL PROPERTY CONSTRAINTS - READ CAREFULLY:
+
+– :hasMotivation - domain: :Character, range: :Motivation
+– :makesMoralDecision - domain: :Character, range: :MoralDecision
+– :experiencesEmotion - domain: :Character, range: :Emotion
+– :advocatesFor - domain: :Character, range: :EthicalPrinciple
+– :conflictBetween - domain: :Conflict, range: ONLY :Character, :EthicalPrinciple, :Law, or :FateConcept (NEVER :Theme or other classes)
+– :developsTheme - domain: :Scene ONLY (NOT :Character, NOT :MoralDecision, NOT :Motivation)
+– :hasTheme - domain: :Play, :Scene, :Speech, :Line, :Performance, or :Adaptation (NOT :Character, NOT :MoralDecision, NOT :Motivation)
+– :relatedTo - can be used for any causal or consequential relationships between any concepts
+
+ALWAYS check the ontology's domain and range constraints before using any property. If a property's domain doesn't match the subject's type, use :relatedTo instead.
+
+General rules:
+
+– Output only valid RDF Turtle. No commentary, no explanation.
+– Use only the following prefixes:
+
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+– All individuals you create must be typed (for example: “a :Emotion”, “a :Motivation”, “a :Conflict”, “a :Theme”, “a :MoralDecision”, “a :EthicalPrinciple”, “a :Character”, etc.).
+– Use consistent naming patterns for identifiers:
+  * Characters: :[CharacterName]_Character_[CharacterName] (e.g., :Antigone_Character_Antigone, :Creon_Character_Creon, :Chorus_Character_Chorus)
+  * Motivations: :[CharacterName]Motivation_[BriefDescription] (e.g., :CreonMotivation_SealAntigoneInCave)
+  * Decisions: :[CharacterName]Decision_[BriefDescription] (e.g., :CreonDecision_ImprisonAlive)
+  * Emotions: :[CharacterName]Emotion_[BriefDescription] (e.g., :ChorusEmotion_AweAtEros)
+  * Themes: :Theme_[BriefDescription] (e.g., :Theme_CivicPurityAndMiasma)
+  * Conflicts: :Conflict_[BriefDescription] (e.g., :Conflict_ErosDerailsJustice)
+  * Ethical Principles: :EthicalPrinciple_[BriefDescription] (e.g., :EthicalPrinciple_Justice)
+  CRITICAL: Ensure character names are consistent - if a character is named "Chorus" in the identifier, the prefix should also reflect "Chorus", not a different character name (e.g., use :Chorus_Character_Chorus, NOT :Antigone_Character_Chorus).
+– Provide :description literals for motivations, emotions, moral principles, themes, and events when appropriate.
+– Do not hallucinate information not supported by the text.
+– Be exhaustive: extract all possible instances of intentions, emotions, principles, contradictions, causal relations, and themes that can be grounded in the passage.
+– You may create additional individuals such as actions, events, decisions, or laws as long as you type them using existing ontology classes and link them using existing ontology properties.
+– Characters mentioned in the passage must be represented as individuals of class :Character if they are not already established in previous output. IMPORTANT: If a character appears in the passage and is relevant to the semantic content (e.g., makes decisions, expresses emotions, advocates for principles, or is involved in conflicts), ensure they have at least one relationship: :hasMotivation, :makesMoralDecision, :experiencesEmotion, or :advocatesFor. Characters should not be created without any relationships unless they are merely mentioned in passing without semantic significance.
+– The output must be fully self-contained and syntactically valid Turtle.
+
+After applying these rules, output the RDF/Turtle triples for the passage below and nothing else.
+
+<TEXT>
+{{ INSERT PASSAGE HERE }}
+</TEXT>

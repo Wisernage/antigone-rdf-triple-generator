@@ -113,6 +113,27 @@ project_root/
   ...
 ```
 
+## Validation
+
+After generating triples, you can validate them against the ontology using the validator:
+
+```bash
+# Validate all triple files
+python validate_triples.py
+
+# Validate a specific file
+python validate_triples.py --file [PRODUCTIONS]/verse_773_to_805/triples_773_to_805.ttl
+
+# Show warnings in addition to errors
+python validate_triples.py --verbose
+```
+
+The validator checks:
+- Property domain/range constraints (e.g., `conflictBetween` only with Character/EthicalPrinciple/Law/FateConcept)
+- Valid RDF/Turtle syntax
+- Proper typing of individuals
+- Correct prefix usage
+
 ## Error Handling
 
 The program handles:
