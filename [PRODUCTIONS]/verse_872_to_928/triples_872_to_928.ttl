@@ -1,0 +1,90 @@
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Chorus a :Character .
+:Antigone a :Character .
+:Creon a :Character .
+:Polyneices a :Character .
+:Persephone a :Character .
+
+:AntigoneEmotionMisery1 a :Emotion ;
+  :description "Antigone laments being led in misery down her final path, unwept, unloved, and unwed." .
+
+:AntigoneEmotionIsolation1 a :Emotion ;
+  :description "Antigone feels abandoned: no friend grieves and no tears are wept for her fate." .
+
+:AntigoneEmotionGriefForFamily1 a :Emotion ;
+  :description "Antigone mourns her dead kin and speaks of joining them among the dead." .
+
+:AntigoneEmotionCherishedHope1 a :Emotion ;
+  :description "Antigone cherishes the thought that she will be dear to her father, mother, and brother in death." .
+
+:AntigoneEmotionConfusionAboutGods1 a :Emotion ;
+  :description "Antigone questions what holy law she violated and why she should still look to the gods when piety has brought a charge of impiety." .
+
+:AntigoneEmotionResentmentAtUnjustJudgment1 a :Emotion ;
+  :description "Antigone calls her judges unjust and wishes they suffer no more than she has suffered at their hands." .
+
+:Antigone :experiencesEmotion :AntigoneEmotionMisery1, :AntigoneEmotionIsolation1, :AntigoneEmotionGriefForFamily1, :AntigoneEmotionCherishedHope1, :AntigoneEmotionConfusionAboutGods1, :AntigoneEmotionResentmentAtUnjustJudgment1 .
+
+:CreonMotivationEnforceOrder1 a :Motivation ;
+  :description "Creon intends Antigone be brought quickly and left alone, sealed in the tomb, as he ordered." .
+
+:CreonMoralDecisionEntombAntigone1 a :MoralDecision ;
+  :description "Creon orders Antigone sealed alone in a shadowy tomb, claiming their hands are clean and that the decision of death or living entombed is hers." .
+
+:Creon :hasMotivation :CreonMotivationEnforceOrder1 ;
+  :makesMoralDecision :CreonMoralDecisionEntombAntigone1 .
+
+:AntigoneMotivationHonorPolyneices1 a :Motivation ;
+  :description "Antigone honored Polyneices by burying him and claims this is her 'reward' for that act." .
+
+:AntigoneMotivationJoinFamilyInDeath1 a :Motivation ;
+  :description "Antigone goes to the tomb as an everlasting home to join her own among the dead." .
+
+:Antigone :hasMotivation :AntigoneMotivationHonorPolyneices1, :AntigoneMotivationJoinFamilyInDeath1 .
+
+:EthicalPrincipleKinHonorAboveAll1 a :EthicalPrinciple ;
+  :description "Antigone asserts a 'law' by which she honors her brother above all others, since she can never have a new brother once her parents are in Hades." .
+
+:EthicalPrinciplePietyReverence1 a :EthicalPrinciple ;
+  :description "Pious/reverent behavior and prayer are invoked as right conduct, though it is said to be intolerable to those in power." .
+
+:Antigone :advocatesFor :EthicalPrincipleKinHonorAboveAll1, :EthicalPrinciplePietyReverence1 .
+:Chorus :advocatesFor :EthicalPrinciplePietyReverence1 .
+
+:ConflictPietyVsPower1 a :Conflict ;
+  :description "Reverent prayers/piety are said to be intolerable to those in power, implying a clash between piety and political authority." ;
+  :conflictBetween :EthicalPrinciplePietyReverence1, :Creon .
+
+:ConflictPietyAccusedAsImpiety1 a :Conflict ;
+  :description "Antigone says pious behavior has incurred the charge of impiety, creating a contradiction between her intent and the accusation." ;
+  :conflictBetween :EthicalPrinciplePietyReverence1, :Antigone .
+
+:ConflictKinLawVsCreonJudgment1 a :Conflict ;
+  :description "Antigone claims she honored Polyneices well by a higher 'law,' but Creon deems her action wrong and reckless." ;
+  :conflictBetween :EthicalPrincipleKinHonorAboveAll1, :CreonMoralDecisionEntombAntigone1 .
+
+:CreonMoralDecisionEntombAntigone1 :relatedTo :AntigoneEmotionMisery1 .
+:AntigoneMotivationHonorPolyneices1 :relatedTo :CreonMoralDecisionEntombAntigone1 .
+
+:ThemePowerVsPiety1 a :Theme ;
+  :description "Political power rejects or punishes reverent prayer and pious conduct." .
+
+:ThemeFamilyLoyaltyAndBurialRites1 a :Theme ;
+  :description "Loyalty to kin and the duty of burial/funeral rites are treated as overriding obligations." .
+
+:ThemeIsolationAndUnmournedDeath1 a :Theme ;
+  :description "Antigone faces death without marriage, friends, or public mourning, emphasizing abandonment." .
+
+:ThemeDivineJusticeAndHumanJudgment1 a :Theme ;
+  :description "Antigone questions whether the gods approve and calls human judges unjust, invoking the possibility of divine reckoning." .
+
+:ThemeLivingEntombment1 a :Theme ;
+  :description "The punishment of being sealed alive in a tomb blurs life and death and frames the tomb as a 'bridal chamber'." .
+
+:Passage875_928 a owl:Thing ;
+  :hasTheme :ThemePowerVsPiety1, :ThemeFamilyLoyaltyAndBurialRites1, :ThemeIsolationAndUnmournedDeath1, :ThemeDivineJusticeAndHumanJudgment1, :ThemeLivingEntombment1 ;
+  :hasConflict :ConflictPietyVsPower1, :ConflictPietyAccusedAsImpiety1, :ConflictKinLawVsCreonJudgment1 .

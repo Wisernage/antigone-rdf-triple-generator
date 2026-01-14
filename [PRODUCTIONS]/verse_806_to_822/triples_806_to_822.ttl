@@ -1,0 +1,51 @@
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Antigone a :Character .
+:Chorus a :Character .
+
+:AntigoneEmotion1 a :Emotion ;
+  :description "Antigone laments that she is setting out on her last journey, seeing her last sunlight, and being led while still living to Hades/Acheron instead of to marriage." .
+
+:Antigone :experiencesEmotion :AntigoneEmotion1 .
+
+:AntigoneMotivation1 a :Motivation ;
+  :description "Antigone acknowledges and accepts her imminent passage to Hades/Acheron as her final journey, framed as a living descent rather than a bridal procession." .
+
+:Antigone :hasMotivation :AntigoneMotivation1 .
+
+:AntigoneDecision1 a :MoralDecision ;
+  :description "Antigone embraces her fate of being led alive to Acheron, declaring she will 'wed Acheron' in place of a human marriage." .
+
+:Antigone :makesMoralDecision :AntigoneDecision1 .
+
+:AntigoneDecision1 :relatedTo :AntigoneMotivation1 .
+
+:ThemeDeathAsMarriage1 a :Theme ;
+  :description "Death is figured as a bridal union: Antigone lacks the wedding song due to her, and instead declares she will wed Acheron." .
+
+:ThemeAutonomyInDeath1 a :Theme ;
+  :description "A self-determined, solitary passage to death: the Chorus characterizes Antigone as living alone and autonomous as she goes to Hades." .
+
+:AntigoneDecision1 :developsTheme :ThemeDeathAsMarriage1 .
+:AntigoneMotivation1 :developsTheme :ThemeDeathAsMarriage1 .
+
+:ChorusMotivation1 a :Motivation ;
+  :description "The Chorus aims to honor Antigone by framing her departure as renowned and praiseworthy, emphasizing that she meets death without plague or sword." .
+
+:Chorus :hasMotivation :ChorusMotivation1 .
+
+:ChorusEmotion1 a :Emotion ;
+  :description "The Chorus expresses admiration and praise for Antigone’s renowned journey to the depths." .
+
+:Chorus :experiencesEmotion :ChorusEmotion1 .
+
+:ChorusMotivation1 :developsTheme :ThemeAutonomyInDeath1 .
+
+:AntigoneDeathEvent1 a owl:Thing ;
+  :description "Antigone is led, still living, by Hades to Acheron’s shore and descends to the corpse-filled depths." .
+
+:AntigoneDecision1 :relatedTo :AntigoneDeathEvent1 .
+:ChorusMotivation1 :relatedTo :AntigoneDeathEvent1 .

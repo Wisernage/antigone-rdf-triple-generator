@@ -1,0 +1,116 @@
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Antigone a :Character .
+:Chorus a :Character .
+:Niobe a :Character .
+:Oedipus a :Character .
+:Labdacids a :Character .
+:Polyneices a :Character .
+
+:AntigoneMotivation1 a :Motivation ;
+  :description "Antigone likens herself to Niobe and accepts being led by the god toward sleep (death), presenting her fate as divinely guided." .
+
+:Antigone :hasMotivation :AntigoneMotivation1 .
+
+:AntigoneEmotion1 a :Emotion ;
+  :description "Sense of being like Niobe, dissolving in tears as she approaches death." .
+
+:Antigone :experiencesEmotion :AntigoneEmotion1 .
+
+:ChorusEthicalPrinciple1 a :EthicalPrinciple ;
+  :description "Mortals are not equal to the god-born; yet it is great for one dying to be said to have obtained godlike fortune in life and death." .
+
+:Chorus :advocatesFor :ChorusEthicalPrinciple1 .
+
+:ChorusEmotion1 a :Emotion ;
+  :description "Reverent consolation: admiration for Niobe's godlike lot offered as comfort to Antigone." .
+
+:Chorus :experiencesEmotion :ChorusEmotion1 .
+
+:AntigoneEmotion2 a :Emotion ;
+  :description "Feeling mocked and insulted by the Chorus; indignation at being jeered to her face." .
+
+:Antigone :experiencesEmotion :AntigoneEmotion2 .
+
+:AntigoneMotivation2 a :Motivation ;
+  :description "Calls on Thebes (springs of Dirce, grove of Thebes) to witness her departure, unwept, to a rock-heap prison and unknown tomb." .
+
+:Antigone :hasMotivation :AntigoneMotivation2 .
+
+:AntigoneEmotion3 a :Emotion ;
+  :description "Desolation and liminality: she is neither among mortals nor shades, neither with the living nor the dead." .
+
+:Antigone :experiencesEmotion :AntigoneEmotion3 .
+
+:ChorusEthicalPrinciple2 a :EthicalPrinciple ;
+  :description "Recklessness (thrasos) leads to a fall; one must pay for a father's crimes (ancestral retribution)." .
+
+:Chorus :advocatesFor :ChorusEthicalPrinciple2 .
+
+:ChorusEmotion2 a :Emotion ;
+  :description "Admonishing severity toward Antigone, framing her suffering as deserved payment for inherited guilt." .
+
+:Chorus :experiencesEmotion :ChorusEmotion2 .
+
+:AntigoneEmotion4 a :Emotion ;
+  :description "Painful remembrance of her father's doom and the Labdacid destiny; anguish over incest and cursed birth." .
+
+:Antigone :experiencesEmotion :AntigoneEmotion4 .
+
+:AntigoneMotivation3 a :Motivation ;
+  :description "To go to her dead kin 'to live' as accursed and unmarried, joining them in death." .
+
+:Antigone :hasMotivation :AntigoneMotivation3 .
+
+:AntigoneEmotion5 a :Emotion ;
+  :description "Sense of being slain alive by her brother's death and its consequences; grief and bitterness toward her brother's 'ill-fated marriage'." .
+
+:Antigone :experiencesEmotion :AntigoneEmotion5 .
+
+:Conflict1 a :Conflict ;
+  :description "Antigone interprets the Chorus' words as mockery and insult, while the Chorus frames her fate as consolable and deserved." ;
+  :conflictBetween :Antigone, :Chorus .
+
+:Conflict2 a :Conflict ;
+  :description "Tension between Antigone's self-understanding as a suffering victim led by divine fate and the Chorus' moralizing claim that she pays for recklessness and ancestral crimes." ;
+  :conflictBetween :AntigoneMotivation1, :ChorusEthicalPrinciple2 .
+
+:AncestralCrimesEvent1 a owl:Thing ;
+  :description "The father's crimes and the Labdacid doom: incestuous union and disastrous marriage within the family line." .
+
+:AntigoneFateEvent1 a owl:Thing ;
+  :description "Antigone's fall and impending death/imprisonment in a rock-heap tomb, unwept and unmarried." .
+
+:AncestralCrimesEvent1 :relatedTo :AntigoneFateEvent1 .
+
+:RecklessnessEvent1 a owl:Thing ;
+  :description "Antigone's rushing into the depths of recklessness toward the high throne of Dike, as the Chorus claims." .
+
+:RecklessnessEvent1 :relatedTo :AntigoneFateEvent1 .
+
+:PolyneicesDeathEvent1 a owl:Thing ;
+  :description "Polyneices' death, which Antigone says has 'slain her alive'." .
+
+:PolyneicesDeathEvent1 :relatedTo :AntigoneFateEvent1 .
+
+:DikeTheme1 a :Theme ;
+  :description "Justice (Dike) and its perilous pursuit: striving for Dike's high throne versus falling through recklessness." .
+
+:MortalityTheme1 a :Theme ;
+  :description "Mortality versus divinity: mortals contrasted with the god-born, and the desire for godlike fortune in death." .
+
+:AncestralCurseTheme1 a :Theme ;
+  :description "Inherited guilt and family doom: the Labdacid destiny and paying for a father's crimes." .
+
+:LamentationTheme1 a :Theme ;
+  :description "Lament and isolation: going unwept by loved ones, tears like Niobe, and being between life and death." .
+
+:MarriageCurseTheme1 a :Theme ;
+  :description "Corrupted kinship and marriage: incestuous origins and 'ill-fated marriage' leading to ruin." .
+
+:PassageThemeLink1 a owl:Thing ;
+  :description "This passage (Antigone and Chorus exchange on Niobe, mockery, Dike, and Labdacid doom)." ;
+  :developsTheme :DikeTheme1, :MortalityTheme1, :AncestralCurseTheme1, :LamentationTheme1, :MarriageCurseTheme1 .

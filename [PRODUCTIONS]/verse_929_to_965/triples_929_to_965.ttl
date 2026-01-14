@@ -1,0 +1,74 @@
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:Chorus a :Character .
+:Creon a :Character .
+:Antigone a :Character .
+
+:AntigoneEmotion1 a :Emotion ;
+  :description "Her soul is still gripped by the same brutal gusts of wind (inner turmoil)."^^xsd:string .
+
+:AntigoneEmotion2 a :Emotion ;
+  :description "She feels that Creon's words are nearly death (dread/terror at imminent death)."^^xsd:string .
+
+:AntigoneEmotion3 a :Emotion ;
+  :description "Lament as she is led away without delay, calling on Thebes and the ancient gods."^^xsd:string .
+
+:Antigone :experiencesEmotion :AntigoneEmotion1, :AntigoneEmotion2, :AntigoneEmotion3 .
+
+:CreonMotivation1 a :Motivation ;
+  :description "To give the guards reason to weep for their sluggishness (to punish/discipline them)."^^xsd:string .
+
+:Creon :hasMotivation :CreonMotivation1 .
+
+:CreonDecision1 a :MoralDecision ;
+  :description "He refuses to encourage Antigone to hope for a different outcome, affirming the sentence will stand."^^xsd:string .
+
+:Creon :makesMoralDecision :CreonDecision1 .
+
+:AntigonePrinciple1 a :EthicalPrinciple ;
+  :description "Revering reverence/eusebeia (piety toward what is sacred) even at personal cost."^^xsd:string .
+
+:Antigone :advocatesFor :AntigonePrinciple1 .
+
+:AntigoneMotivation1 a :Motivation ;
+  :description "She endures suffering because she revered reverence (acted from piety)."^^xsd:string .
+
+:Antigone :hasMotivation :AntigoneMotivation1 .
+
+:Conflict1 a :Conflict ;
+  :description "Antigone's pious reverence leads to her suffering at the hands of Theban rulers (Creon's authority versus her piety)."^^xsd:string .
+
+:Conflict1 :conflictBetween :Antigone, :Creon, :AntigonePrinciple1 .
+
+:CreonDecision1 :relatedTo :AntigoneEmotion2 .
+
+:AntigoneMotivation1 :relatedTo :Conflict1 .
+
+:Theme1 a :Theme ;
+  :description "The terrible power of destiny: nothing (wealth, war, towers, ships) can escape its grasp."^^xsd:string .
+
+:Theme2 a :Theme ;
+  :description "Divine power and punishment: those who provoke gods (e.g., Dionysus) are confined and humbled; madness recedes under divine force."^^xsd:string .
+
+:Theme3 a :Theme ;
+  :description "Noble lineage does not prevent suffering (Danaë and Antigone as noble yet enclosed/led away)."^^xsd:string .
+
+:Chorus :developsTheme :Theme1, :Theme2, :Theme3 .
+
+:DanaeEvent1 a owl:Thing ;
+  :description "Danaë traded the sky's light for enclosure in bronze walls, hidden as if in a grave, yet preserved Zeus' seed."^^xsd:string .
+
+:EdonianKingEvent1 a owl:Thing ;
+  :description "The sharp-tempered Edonian king, son of Dryas, was shut up by Dionysus in craggy confinement; his madness and might receded."^^xsd:string .
+
+:EdonianKingEvent2 a owl:Thing ;
+  :description "He had pestered the god with biting words and tried to halt the frenzied Bacchantes and the fire of Apollo, provoking the Muses."^^xsd:string .
+
+:EdonianKingEvent2 :relatedTo :EdonianKingEvent1 .
+
+:DanaeEvent1 :relatedTo :Theme3 .
+:EdonianKingEvent1 :relatedTo :Theme2 .
+:EdonianKingEvent2 :relatedTo :Theme2 .

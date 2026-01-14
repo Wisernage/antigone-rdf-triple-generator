@@ -18,8 +18,10 @@ ENV/
 *.swp
 *.swo
 /Instructions
-# Output files (optional - uncomment if you don't want to track generated triples)
-# Instructions_Outputform/[PRODUCTIONS]/**/*.ttl
+[PRODUCTIONS]/
+
+# Output files - ignore all generated triples
+[PRODUCTIONS]/**/*.ttl
 
 # OS
 .DS_Store
