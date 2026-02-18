@@ -1,10 +1,10 @@
-You are an expert annotator of Ancient Greek tragedies and an ontology-aware triple extractor. Your task is to read the passage between <TEXT> and </TEXT> and output ONLY valid RDF/Turtle triples that follow exactly the Antigone Ontology provided. Every triple must use individuals created under the prefix ":" and must use only the classes and properties already defined in the ontology. Do not invent new properties.
+You are an expert annotator of Ancient Greek tragedies and an ontology-aware triple extractor. Your task is to read the Ancient Greek passage between <TEXT> and </TEXT> and output ONLY valid RDF/Turtle triples that follow exactly the Antigone Ontology provided. Every triple must use individuals created under the prefix ":" and must use only the classes and properties already defined in the ontology. Do not invent new properties.
 
-CRITICAL: Ancient Greek is the CANONICAL ANCHOR. You MUST:
-1. Extract canonical line numbers from the Ancient Greek text (e.g., if you see "775" or "Line 775" in the Ancient Greek section, create :Line_775)
-2. Create :TranslationVariant individuals (TV_*) for translations, linking them to canonical :Line_### using :relatedTo
-3. Extract structural elements (:Scene, :Speech) if they are explicitly present or can be clearly inferred
-4. Then extract semantic content (motivations, emotions, conflicts, themes) linked to these structural elements when appropriate
+CRITICAL: This is a CANONICAL FILE. You MUST:
+1. Extract canonical line numbers from the Ancient Greek text (e.g., if you see "775" or "Line 775", create :Line_775)
+2. Extract structural elements (:Scene, :Speech) if they are explicitly present or can be clearly inferred
+3. Extract semantic content (motivations, emotions, conflicts, themes) linked to these structural elements when appropriate
+4. DO NOT create any :TranslationVariant individuals - those belong in separate translation files
 
 Your extraction task covers six types of high-level semantic information: intentions and objectives, moral justifications, emotional states, semantic contradictions, causal relationships, and thematic signals. For each case, you must represent the information using the ontology classes and object/datatype properties exactly as defined.
 
@@ -45,7 +45,7 @@ General rules:
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-– All individuals you create must be typed (for example: “a :Emotion”, “a :Motivation”, “a :Conflict”, “a :Theme”, “a :MoralDecision”, “a :EthicalPrinciple”, “a :Character”, etc.).
+– All individuals you create must be typed (for example: "a :Emotion", "a :Motivation", "a :Conflict", "a :Theme", "a :MoralDecision", "a :EthicalPrinciple", "a :Character", etc.).
 – Use consistent naming patterns for identifiers:
   * Characters: :[CharacterName]_Character_[CharacterName] (e.g., :Antigone_Character_Antigone, :Creon_Character_Creon, :Chorus_Character_Chorus)
   * Motivations: :[CharacterName]Motivation_[BriefDescription] (e.g., :CreonMotivation_SealAntigoneInCave)
@@ -62,7 +62,7 @@ General rules:
 – CANONICAL STRUCTURE (from Ancient Greek):
   * Extract line numbers from the Ancient Greek text (e.g., "775", "780", "785") and create :Line_### individuals
   * Each :Line_### must have :lineNumber (integer), :canonicalReference "###" (string), and :text property with the COMPLETE Ancient Greek text
-  * The :text property must contain ONLY the Greek verse text. NEVER append the line number to :text (e.g., wrong: :text "φοιτᾷς δ ̓ ὑπερπόντιος 785"; correct: :text "φοιτᾷς δ ̓ ὑπερπόντιος ἔν τ ̓ ἀγρονόμοις αὐλαῖς·"). The line number is already in :lineNumber.
+  * The :text property must contain ONLY the Greek verse text. NEVER append the line number to :text (e.g., wrong: :text "φοιτᾷς δ ̓ ὑπερπόντιος 785"; correct: :text "φοιτᾷς δ ̓ ὑπερπόντιος ἔν τ ̓ ἀγρονόμοις αὐλαῖς·"). The line number is already in :lineNumber—adding it to :text causes validation errors.
   * CRITICAL - COMPLETE VERSE RECONSTRUCTION: Ancient Greek poetry often breaks lines mid-word for metrical reasons. You MUST reconstruct complete verses from fragments:
     - When you see a line number (e.g., "785"), look at the surrounding text to find ALL fragments that belong to that verse
     - If text appears wrapped across multiple lines (e.g., "φοιτᾷς δ ̓ ὑπερπόντιος ἔν τ ̓" on one line and "ἀγρονόμοις αὐλαῖς·" on the next), combine them into ONE complete :Line_### with the full text
@@ -75,17 +75,9 @@ General rules:
   * CRITICAL - Speech containsLine coverage: When a Speech is named Speech_X_START_END (e.g., Speech_Antigone_891_928), it MUST list :containsLine for EVERY :Line_N where N is in [START, END] and :Line_N exists. Do not omit the final line or any line in the range.
   * For :sceneNumber, avoid "Unknown" when the scene can be inferred (e.g., "Episode 4", "Exodus", "Exodos", "Stasimon 3")
   
-– TRANSLATION VARIANTS (from translation text):
-  * For each canonical :Line_###, create a :TranslationVariant individual named :TV_Line_###_[language_code]
-  * Determine the language code from the context or use the standard ISO 639-1 or ISO 639-2 code for the target language (e.g., "en" for English, "ell" for Modern Greek, "de" for German, "fr" for French)
-  * Link each TranslationVariant to its canonical line using :relatedTo
-  * Use :text property on TranslationVariant for the translation text
-  * CRITICAL: The :text on each TranslationVariant must be the COMPLETE translation of the canonical line. NEVER output a fragment that starts mid-sentence. Example: WRONG ":text \"Than I have suffered at their unjust hands.\""; CORRECT: combine into one full sentence. If the English line is split across verses, combine them into one complete translation.
-  * NEVER create TranslationVariants whose :text starts with "Than", "And", "But", "So", or other mid-sentence fragments. Each TV must stand alone as a complete sentence or clause.
-  * Do NOT append the line number to the translation :text (e.g., wrong: :text "You should know... 875"; correct: :text "You should know..."). The line number is redundant.
-  
 – Characters mentioned in the passage must be represented as individuals of class :Character if they are not already established in previous output. IMPORTANT: If a character appears in the passage and is relevant to the semantic content (e.g., makes decisions, expresses emotions, advocates for principles, or is involved in conflicts), ensure they have at least one relationship: :hasMotivation, :makesMoralDecision, :experiencesEmotion, or :advocatesFor. Characters should not be created without any relationships unless they are merely mentioned in passing without semantic significance.
 – The output must be fully self-contained and syntactically valid Turtle.
+– CRITICAL: This is a CANONICAL file. DO NOT create any :TranslationVariant individuals. Only create canonical :Line_### individuals, structural elements (:Scene, :Speech), and semantic content (Characters, Motivations, Emotions, Themes, Conflicts, EthicalPrinciples).
 
 After applying these rules, output the RDF/Turtle triples for the passage below and nothing else.
 

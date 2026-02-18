@@ -1,0 +1,50 @@
+You are an expert annotator of Ancient Greek tragedies and an ontology-aware triple extractor. Your task is to read the translation passage between <TEXT> and </TEXT> and output ONLY valid RDF/Turtle triples that follow exactly the Antigone Ontology provided. Every triple must use individuals created under the prefix ":" and must use only the classes and properties already defined in the ontology. Do not invent new properties.
+
+CRITICAL: This is a TRANSLATION FILE. You MUST:
+1. ONLY create :TranslationVariant individuals (TV_*) for translations
+2. Link each TranslationVariant to the canonical :Line_### using :relatedTo
+3. Reference the canonical triples provided in <CANONICAL_TRIPLES> to identify which :Line_### individuals exist
+4. DO NOT create or redefine any canonical :Line_###, :Scene, :Speech, :Character, or semantic content individuals
+5. DO NOT create any semantic content (Motivations, Emotions, Themes, Conflicts, etc.) - those belong in the canonical file
+
+MULTI-EXTRACTOR SAFETY RULES:
+- This file is append-only
+- Never redefine an individual already present in the input
+- Translation files may define ONLY :TranslationVariant individuals
+- Naming convention: Use :TV_Line_###_[language_code] where [language_code] is the ISO 639-1 or ISO 639-2 language code (e.g., "en" for English, "ell" for Modern Greek, "de" for German, "fr" for French)
+- If a TranslationVariant already exists, do NOT recreate it
+- If unsure, omit the assertion rather than inventing it
+
+General rules:
+
+– Output only valid RDF Turtle. No commentary, no explanation.
+– Use only the following prefixes:
+
+@prefix : <http://example.org/antigone#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+– TRANSLATION VARIANTS (from translation text):
+  * Check the <CANONICAL_TRIPLES> section to see which :Line_### individuals exist
+  * For each canonical :Line_### that has a corresponding translation in the text, create a :TranslationVariant individual named :TV_Line_###_[language_code]
+  * Determine the language code from the context or use the standard code for the target language (e.g., "en" for English, "ell" for Modern Greek, "de" for German, "fr" for French)
+  * Link each TranslationVariant to its canonical line using :relatedTo
+  * Use :text property on TranslationVariant for the translation text
+  * CRITICAL: The :text on each TranslationVariant must be the COMPLETE translation of the canonical line. NEVER output a fragment that starts mid-sentence. Example: WRONG ":text \"Than I have suffered at their unjust hands.\"" (continuation of "May they suffer no more greatly than..."); CORRECT: combine into one full sentence. If the English line is split across verses, combine them into one complete translation.
+  * NEVER create TranslationVariants whose :text starts with "Than" (suggests "more than..."), "And", "But", "So", or other mid-sentence fragments. Each TV must stand alone as a complete sentence or clause. If you cannot find the full sentence, omit the TV rather than outputting a fragment.
+  * Do NOT append the line number to the translation :text (e.g., wrong: :text "You should know... 875"; correct: :text "You should know..."). The line number is redundant and causes validation errors.
+  * If you cannot identify which canonical :Line_### a translation corresponds to, skip it rather than guessing
+  * Only create TranslationVariants for canonical lines that actually exist in the <CANONICAL_TRIPLES> section
+
+– At the end of output, include a short REPORT comment:
+  # REPORT: Produced TranslationVariants for lines X–Y. Skipped Z (missing anchors).
+
+– The output must be fully self-contained and syntactically valid Turtle.
+– CRITICAL: DO NOT create any canonical :Line_### individuals, :Scene, :Speech, :Character, :Motivation, :Emotion, :Theme, :Conflict, or :EthicalPrinciple individuals. ONLY create :TranslationVariant individuals.
+
+After applying these rules, output the RDF/Turtle triples for the passage below and nothing else.
+
+<TEXT>
+{{ INSERT PASSAGE HERE }}
+</TEXT>

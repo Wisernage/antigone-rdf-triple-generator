@@ -335,6 +335,200 @@ class TripleValidator:
                         f"Multiple characters with role '{role}' but different names: {[c.n3(graph.namespace_manager) for c in chars]}"
                     )
     
+    def _check_incomplete_greek_text(self, graph: Graph):
+        """Check for incomplete Greek text fragments in Line individuals."""
+        import re
+        
+        # Get all Line individuals and their text
+        line_texts = {}
+        for subject, predicate, object_val in graph:
+            if predicate == ANTIGONE.text and ANTIGONE.Line in self._get_individual_types(graph, subject):
+                text_value = str(object_val)
+                line_texts[subject] = text_value
+        
+        # Check each line for completeness issues
+        for line_uri, text in line_texts.items():
+            # Remove line numbers and whitespace for analysis
+            # Line numbers typically appear at the end like " 785" or "785"
+            text_clean = re.sub(r'\s*\d+\s*$', '', text).strip()
+            
+            # Check 1: Lines ending with hyphens (indicating word breaks)
+            if text_clean.endswith('-') or text_clean.endswith('—'):
+                self.errors.append(
+                    f"Incomplete Greek text: {line_uri.n3(graph.namespace_manager)} ends with a hyphen, "
+                    f"indicating a word break. The line should be reconstructed from fragments. "
+                    f"Text: \"{text[:100]}...\""
+                )
+            
+            # Check 2: Lines starting mid-word (common pattern: starts with lowercase Greek letter after punctuation)
+            # Greek text that starts with a fragment like "πων" without context
+            # Check if text starts with a word fragment (short word, no capital, appears incomplete)
+            first_word_match = re.match(r'^[\s,;:·]*([α-ωΑ-Ωάέήίόύώϊϋΐΰἀἁἂἃἄἅἆἇἐἑἒἓἔἕἠἡἢἣἤἥἦἧἰἱἲἳἴἵἶἷὀὁὂὃὄὅὐὑὒὓὔὕὖὗὠὡὢὣὤὥὦὧὰὲὴὶὸὺὼᾀᾁᾂᾃᾄᾅᾆᾇᾐᾑᾒᾓᾔᾕᾖᾗᾠᾡᾢᾣᾤᾥᾦᾧᾰᾱᾲᾳᾴ᾵ᾶᾷῂῃῄ῅ῆῇῐῑῒΐ῔῕ῖῗῠῡῢΰῤῥῦῧῲῳῴ῵ῶῷ]+)', text_clean)
+            if first_word_match:
+                first_word = first_word_match.group(1)
+                # If first word is very short (1-3 chars) and doesn't start with capital or article, might be fragment
+                if len(first_word) <= 3 and not first_word.startswith(('ὁ', 'ἡ', 'τὸ', 'οἱ', 'αἱ', 'τὰ', 'ὦ', 'Ὦ')):
+                    # Check if it looks like a fragment (common fragment patterns)
+                    fragment_patterns = ['πων', 'ζει', 'φείοις', 'τ\'', 'δ\'', 'μ\'', 'σ\'', 'ν\'', 'γ\'', 'θ\'']
+                    if any(pattern in first_word for pattern in fragment_patterns):
+                        self.errors.append(
+                            f"Incomplete Greek text: {line_uri.n3(graph.namespace_manager)} appears to start mid-word/fragment. "
+                            f"The line should include the complete verse from the beginning. "
+                            f"Text: \"{text[:100]}...\""
+                        )
+            
+            # Check 3: Lines that are suspiciously short (less than 10 characters of actual Greek text)
+            # Extract only Greek characters
+            greek_chars = re.findall(r'[α-ωΑ-Ωάέήίόύώϊϋΐΰἀἁἂἃἄἅἆἇἐἑἒἓἔἕἠἡἢἣἤἥἦἧἰἱἲἳἴἵἶἷὀὁὂὃὄὅὐὑὒὓὔὕὖὗὠὡὢὣὤὥὦὧὰὲὴὶὸὺὼᾀᾁᾂᾃᾄᾅᾆᾇᾐᾑᾒᾓᾔᾕᾖᾗᾠᾡᾢᾣᾤᾥᾦᾧᾰᾱᾲᾳᾴ᾵ᾶᾷῂῃῄ῅ῆῇῐῑῒΐ῔῕ῖῗῠῡῢΰῤῥῦῧῲῳῴ῵ῶῷ]+', text_clean)
+            greek_text_length = sum(len(word) for word in greek_chars)
+            
+            if greek_text_length < 10 and greek_text_length > 0:
+                self.warnings.append(
+                    f"Very short Greek text: {line_uri.n3(graph.namespace_manager)} contains only {greek_text_length} Greek characters. "
+                    f"This might indicate an incomplete extraction. Text: \"{text[:100]}...\""
+                )
+            
+            # Check 4: Lines ending without sentence-ending punctuation
+            # Complete verses typically end with · . ; : ! ? (comma may end protasis; Greek letters suggest wrap)
+            if text_clean:
+                last_char = text_clean[-1]
+                has_greek = bool(re.search(r'[α-ωΑ-Ω]', text_clean))
+                if has_greek and last_char == ',':
+                    self.warnings.append(
+                        f"Possibly incomplete Greek: {line_uri.n3(graph.namespace_manager)} ends with comma; "
+                        f"verse may continue. Check source. Text: \"{text[:80]}...\""
+                    )
+                elif has_greek and last_char not in '·.;:!?)':
+                    # Ends with Greek letter (not punctuation) - may be mid-verse
+                    if text_clean.endswith(('τ\'', 'δ\'', 'μ\'', 'σ\'', 'ν\'')):
+                        self.errors.append(
+                            f"Incomplete Greek text: {line_uri.n3(graph.namespace_manager)} appears to end mid-phrase. "
+                            f"The line should include the complete verse. Text: \"{text[:80]}...\""
+                        )
+                    elif len(text_clean) > 15:  # Substantial text ending without punctuation
+                        self.warnings.append(
+                            f"Possibly incomplete Greek text: {line_uri.n3(graph.namespace_manager)} ends without "
+                            f"sentence punctuation (·.;:!?). Verse may wrap to next line. Text: \"{text[:80]}...\""
+                        )
+    
+    def _check_speech_contains_line_coverage(self, graph: Graph):
+        """Check that Speech individuals contain all Lines within their stated range."""
+        import re
+        # Pattern: Speech_Character_START_END or Speech_Chorus_START_END
+        speech_pattern = re.compile(r'^Speech_[A-Za-z]+_(\d+)_(\d+)$')
+        line_pattern = re.compile(r'^Line_(\d+)$')
+        
+        # Build map: line_number -> line_uri
+        line_numbers = {}
+        for subject, predicate, object_val in graph:
+            if predicate == ANTIGONE.lineNumber and ANTIGONE.Line in self._get_individual_types(graph, subject):
+                try:
+                    num = int(object_val)
+                    line_numbers[num] = subject
+                except (ValueError, TypeError):
+                    pass
+        
+        # Get all Speech individuals and their contained lines
+        speeches = {}
+        for subject in graph.subjects(RDF.type, ANTIGONE.Speech):
+            local = self._get_individual_local_name(subject)
+            match = speech_pattern.match(local)
+            if match:
+                start, end = int(match.group(1)), int(match.group(2))
+                contained = set()
+                for _, _, line_uri in graph.triples((subject, ANTIGONE.containsLine, None)):
+                    line_local = self._get_individual_local_name(line_uri)
+                    line_match = line_pattern.match(line_local)
+                    if line_match:
+                        contained.add(int(line_match.group(1)))
+                speeches[subject] = (start, end, contained)
+        
+        for speech_uri, (start, end, contained) in speeches.items():
+            for n in range(start, end + 1):
+                if n in line_numbers and n not in contained:
+                    self.errors.append(
+                        f"Speech {speech_uri.n3(graph.namespace_manager)} spans lines {start}-{end} but "
+                        f"does not contain :Line_{n}. Add :containsLine :Line_{n} ;"
+                    )
+    
+    def _check_translation_fragments(self, graph: Graph):
+        """Check TranslationVariants for fragmentary or nonsensical text."""
+        # Fragment patterns: text that suggests it's a continuation, not a complete translation
+        # "Than" at start = fragment from "may they suffer no more than..."
+        fragment_start_patterns = [
+            r'^\s*Than\s+',
+        ]
+        import re
+        
+        for subject, predicate, object_val in graph:
+            if predicate == ANTIGONE.text and ANTIGONE.TranslationVariant in self._get_individual_types(graph, subject):
+                text = str(object_val).strip()
+                # Remove trailing line numbers for analysis
+                text_clean = re.sub(r'\s*\d+\s*$', '', text).strip()
+                
+                for pattern in fragment_start_patterns:
+                    if re.search(pattern, text_clean, re.IGNORECASE):
+                        # Get related Line for context
+                        related = list(graph.objects(subject, ANTIGONE.relatedTo))
+                        line_ref = f" (linked to {related[0].n3(graph.namespace_manager)})" if related else ""
+                        self.errors.append(
+                            f"Translation fragment: {subject.n3(graph.namespace_manager)} appears to be a "
+                            f"continuation, not a complete line translation. Text starts with fragment pattern."
+                            f"{line_ref} Text: \"{text_clean[:60]}...\""
+                        )
+                        break
+    
+    def _check_line_canonical_reference(self, graph: Graph):
+        """Check that Line individuals have :canonicalReference property."""
+        for subject in graph.subjects(RDF.type, ANTIGONE.Line):
+            refs = list(graph.objects(subject, ANTIGONE.canonicalReference))
+            if not refs:
+                self.warnings.append(
+                    f"Line {subject.n3(graph.namespace_manager)} is missing :canonicalReference. "
+                    f"Add :canonicalReference \"N\" where N is the line number."
+                )
+    
+    def _check_redundant_line_numbers(self, graph: Graph):
+        """Check for redundant line numbers in :text (Line and TranslationVariant)."""
+        import re
+        # Line :text
+        for subject, predicate, object_val in graph:
+            if predicate == ANTIGONE.text and ANTIGONE.Line in self._get_individual_types(graph, subject):
+                text = str(object_val)
+                line_nums = list(graph.objects(subject, ANTIGONE.lineNumber))
+                if line_nums:
+                    n = int(line_nums[0])
+                    if re.search(rf'\s+{re.escape(str(n))}\s*\.?\s*$', text):
+                        self.warnings.append(
+                            f"Redundant line number in Line :text: {subject.n3(graph.namespace_manager)} "
+                            f"has \"{n}\" at end of :text; remove it (already in :lineNumber)."
+                        )
+        # TranslationVariant :text
+        for subject, predicate, object_val in graph:
+            if predicate == ANTIGONE.text and ANTIGONE.TranslationVariant in self._get_individual_types(graph, subject):
+                text = str(object_val)
+                # Extract line number from TV name (TV_Line_875_en -> 875)
+                local = self._get_individual_local_name(subject)
+                match = re.match(r'^TV_Line_(\d+)_', local)
+                if match:
+                    n = match.group(1)
+                    if re.search(rf'\s+{re.escape(n)}\s*\.?\s*$', text):
+                        self.warnings.append(
+                            f"Redundant line number in TranslationVariant :text: {subject.n3(graph.namespace_manager)} "
+                            f"has \"{n}\" at end of :text; remove it."
+                        )
+    
+    def _check_scene_number_unknown(self, graph: Graph):
+        """Check for sceneNumber 'Unknown' which may need improvement."""
+        for subject, predicate, object_val in graph:
+            if predicate == ANTIGONE.sceneNumber and ANTIGONE.Scene in self._get_individual_types(graph, subject):
+                val = str(object_val).strip()
+                if val.lower() == 'unknown':
+                    self.warnings.append(
+                        f"Scene {subject.n3(graph.namespace_manager)} has :sceneNumber \"Unknown\". "
+                        f"Consider inferring from context (e.g., Episode 4, Exodus, Exodos)."
+                    )
+    
     def validate_file(self, triple_file: Path) -> Tuple[bool, List[str], List[str]]:
         """
         Validate a triple file.
@@ -395,7 +589,71 @@ class TripleValidator:
         # Check for semantic issues
         self._check_semantic_issues(graph)
         
+        # Check file type: by filename (legacy) or by path (output.ttl in language subfolders)
+        file_name = triple_file.name
+        path_str = str(triple_file)
+        is_canonical = '_canonical.ttl' in file_name or (file_name == 'output.ttl' and 'ancient_greek' in path_str)
+        is_translation = '_translations.ttl' in file_name or (file_name == 'output.ttl' and ('english' in path_str or 'modern_greek' in path_str))
+        
+        if is_canonical:
+            # Canonical files should NOT contain TranslationVariants
+            self._check_canonical_file_constraints(graph)
+        elif is_translation:
+            # Old format (_translations.ttl): only TranslationVariants allowed
+            # New format (output.ttl in english/modern_greek): structure + TV allowed, skip strict check
+            if '_translations.ttl' in file_name:
+                self._check_translation_file_constraints(graph)
+        
+        # Check for incomplete Greek text (only when Lines have :text - canonical/combined)
+        if is_canonical or not is_translation:
+            self._check_incomplete_greek_text(graph)
+        # Structure checks: canonical and new translation format (output.ttl in english/modern_greek)
+        if is_canonical or (is_translation and file_name == 'output.ttl'):
+            self._check_speech_contains_line_coverage(graph)
+            self._check_line_canonical_reference(graph)
+            self._check_scene_number_unknown(graph)
+        # Translation fragments and redundant line numbers apply to any file with Lines or TranslationVariants
+        self._check_translation_fragments(graph)
+        self._check_redundant_line_numbers(graph)
+        
         return len(self.errors) == 0, self.errors, self.warnings
+    
+    def _check_canonical_file_constraints(self, graph: Graph):
+        """Check that canonical files don't contain TranslationVariants."""
+        for subject, predicate, object_val in graph:
+            if predicate == RDF.type and object_val == ANTIGONE.TranslationVariant:
+                self.errors.append(
+                    f"Canonical file should not contain TranslationVariants. "
+                    f"Found: {subject.n3(graph.namespace_manager)}"
+                )
+    
+    def _check_translation_file_constraints(self, graph: Graph):
+        """Check that translation files only contain TranslationVariants."""
+        # Get all individuals and their types
+        individuals = {}
+        for subject, predicate, object_val in graph:
+            if predicate == RDF.type:
+                if subject not in individuals:
+                    individuals[subject] = set()
+                individuals[subject].add(object_val)
+        
+        # Check for non-TranslationVariant individuals
+        for individual, types in individuals.items():
+            if ANTIGONE.TranslationVariant not in types:
+                # Allow prefixes and basic RDF types, but not semantic content
+                allowed_types = {OWL.NamedIndividual, RDF.type}
+                if not types.intersection(allowed_types) or len(types) > len(types.intersection(allowed_types)):
+                    # Check if it's a structural or semantic type that shouldn't be in translation files
+                    forbidden_types = {
+                        ANTIGONE.Line, ANTIGONE.Scene, ANTIGONE.Speech, ANTIGONE.Character,
+                        ANTIGONE.Motivation, ANTIGONE.Emotion, ANTIGONE.Theme, ANTIGONE.Conflict,
+                        ANTIGONE.MoralDecision, ANTIGONE.EthicalPrinciple
+                    }
+                    if types.intersection(forbidden_types):
+                        self.errors.append(
+                            f"Translation file should only contain TranslationVariants. "
+                            f"Found: {individual.n3(graph.namespace_manager)} with types {[str(t) for t in types]}"
+                        )
     
     def validate_directory(self, productions_dir: str = "[PRODUCTIONS]") -> Dict[str, Tuple[bool, List[str], List[str]]]:
         """
@@ -417,10 +675,17 @@ class TripleValidator:
         # Find all verse range directories
         for verse_dir in productions_path.iterdir():
             if verse_dir.is_dir() and verse_dir.name.startswith('verse_'):
-                # Find triple files
+                # New format: verse_*/{ancient_greek,english,modern_greek}/output.ttl
+                for lang in ('ancient_greek', 'english', 'modern_greek'):
+                    output_file = verse_dir / lang / 'output.ttl'
+                    if output_file.exists():
+                        is_valid, errors, warnings = self.validate_file(output_file)
+                        results[str(output_file)] = (is_valid, errors, warnings)
+                # Legacy format: verse_*/triples_*.ttl (backward compatibility)
                 for triple_file in verse_dir.glob('triples_*.ttl'):
-                    is_valid, errors, warnings = self.validate_file(triple_file)
-                    results[str(triple_file)] = (is_valid, errors, warnings)
+                    if str(triple_file) not in results:  # Avoid duplicate if both layouts exist
+                        is_valid, errors, warnings = self.validate_file(triple_file)
+                        results[str(triple_file)] = (is_valid, errors, warnings)
         
         return results
 
@@ -428,6 +693,13 @@ class TripleValidator:
 def main():
     """Main entry point."""
     import argparse
+    import io
+    import sys
+    
+    # Set UTF-8 encoding for stdout/stderr to handle Greek characters
+    if sys.platform == 'win32':
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
     
     parser = argparse.ArgumentParser(
         description='Validate RDF/Turtle triple files against the Antigone ontology'

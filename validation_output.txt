@@ -1,0 +1,11 @@
+﻿python : Error: 'charmap' codec can't encode characters in position 148-150: character maps to <undefined>
+At C:\Users\Jim\AppData\Local\Temp\ps-script-1450607d-6413-4cca-ad71-7d08a19844bc.ps1:108 char:53
++ ... Generator"; python validate_triples.py --file "[PRODUCTIONS]\verse_77 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Error: 'charmap... to <undefined>:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Validating: [PRODUCTIONS]\verse_773_to_805\triples_773_to_805.ttl
+======================================================================
+[ERROR] INVALID - Constraint violations found:

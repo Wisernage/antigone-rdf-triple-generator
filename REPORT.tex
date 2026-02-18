@@ -1,0 +1,200 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{parskip}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\geometry{margin=2.5cm}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!10},
+  columns=fullflexible,
+  keepspaces=true,
+}
+
+\title{Antigone RDF Triple Generation:\\
+       Report on LLM-Assisted Ontology-Based Annotation}
+\author{Dimitrios Grammenidis\\
+       Student ID: CSD3933\\
+       Role: R2}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+This report documents the pipeline and methodology used to generate RDF/Turtle triples from Sophocles' \textit{Antigone} (verses 773--965), following the Antigone Ontology. The work involved extracting canonical structural and semantic content from Ancient Greek text, producing translation variants for English and Modern Greek, and validating outputs against ontology constraints.
+
+\section{Source Materials}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Book / PDF} & \textbf{Language} & \textbf{Scenes Assigned} \\
+\midrule
+1-Eng-antigone.pdf & English & 773--965 \\
+2-ModernGR-Antigone.pdf & Modern Greek & 773--965 \\
+3-AncientGreek-Antigone.pdf & Ancient Greek & 773--965 \\
+\bottomrule
+\end{tabular}
+\caption{Source texts and verse ranges}
+\end{table}
+
+\section{Work Schedule}
+
+\begin{itemize}
+\item \textbf{14 January 2026} (1 hour): Initial setup; added scenes 773--965 to the pipeline.
+\item \textbf{18 February 2026} (from ca.\ 08:00): Generation, validation, and correction of triples across all verse ranges.
+\end{itemize}
+
+\section{Pipeline Overview}
+
+The pipeline consisted of four main stages:
+
+\begin{enumerate}
+\item \textbf{Generation}: OpenAI API (GPT-5.2) with custom prompts to produce RDF/Turtle triples.
+\item \textbf{Validation}: A Python validator (\texttt{validate\_triples.py}) checking ontology constraints, RDF syntax, and semantic rules.
+\item \textbf{Iteration}: Multiple rounds of generation and validation to refine prompts and fix recurring errors.
+\item \textbf{Correction}: Cursor Composer 1.5 used with the query: ``Fix all the issues that the validator found, plus any that you might find that doesn't adhere to our standards.''
+\end{enumerate}
+
+\section{Prompt Design and Rationale}
+
+We use two separate prompts: one for canonical triples (Ancient Greek) and one for translation variants. This separation improves control and reduces errors.
+
+\subsection{Canonical Prompt (\texttt{Prompt\_canonical.txt})}
+
+The canonical prompt instructs the LLM to extract:
+\begin{itemize}
+\item Structural elements: \texttt{:Scene}, \texttt{:Speech}, \texttt{:Line\_\#\#\#}
+\item Semantic content: motivations, emotions, conflicts, themes, ethical principles, moral decisions
+\item Complete verse reconstruction from hyphenated fragments
+\end{itemize}
+
+\textbf{Rationale for modifications:}
+\begin{itemize}
+\item \textbf{Verse reconstruction}: Ancient Greek poetry often breaks lines mid-word. The prompt explicitly requires joining fragments (e.g., \texttt{ἀνθρώ-} + \texttt{πων} $\rightarrow$ \texttt{ἀνθρώπων}) and forbids incomplete \texttt{:text} ending in hyphens.
+\item \textbf{Speech containsLine coverage}: The validator requires that \texttt{Speech\_X\_START\_END} lists \texttt{:containsLine} for every \texttt{:Line\_N} in [START, END]. The prompt was updated to enforce this.
+\item \textbf{Property constraints}: The prompt encodes ontology domain/range rules (e.g., \texttt{:conflictBetween} only to \texttt{:Character}, \texttt{:EthicalPrinciple}, \texttt{:Law}, or \texttt{:FateConcept}; \texttt{:hasTheme} only on structural elements).
+\item \textbf{No line numbers in \texttt{:text}}: The prompt forbids appending verse numbers to \texttt{:text}, since \texttt{:lineNumber} already stores them.
+\end{itemize}
+
+\subsection{Translation Prompt (\texttt{Prompt\_translations.txt})}
+
+The translation prompt restricts output to \texttt{:TranslationVariant} individuals only. Key rules:
+\begin{itemize}
+\item \textbf{Complete sentences}: Translation variants must not be fragments (e.g., ``Than I have suffered...''). Split verses are combined into one full sentence.
+\item \textbf{No redundant line numbers}: Line numbers must not appear in \texttt{:text}.
+\item \textbf{Reference canonical triples}: The LLM receives the canonical triples to align translations to \texttt{:Line\_\#\#\#}.
+\end{itemize}
+
+\subsection{Alternative Approaches Considered}
+
+A single combined prompt was tried initially but led to:
+\begin{itemize}
+\item Translation variants in canonical files
+\item Canonical elements in translation files
+\item More frequent property-constraint violations
+\end{itemize}
+
+Splitting into canonical vs.\ translation prompts reduced these errors and made validation more straightforward.
+
+\section{LLM Selection: GPT-5.2}
+
+\textbf{Justification:}
+\begin{itemize}
+\item \textbf{Cost vs.\ quality}: GPT-5.2 offers relatively low token cost while maintaining reliable output for structured RDF generation.
+\item \textbf{Structured output}: The task requires strict adherence to an ontology and Turtle syntax; GPT-5.2 handles such constraints well.
+\item \textbf{Multilingual support}: Ancient Greek, English, and Modern Greek are all supported without extra configuration.
+\item \textbf{API availability}: OpenAI API integration was already in place; GPT-5.2 was chosen as the default model in the generator.
+\end{itemize}
+
+Temperature was set to 0.3 to balance consistency with some variation. Max tokens: 4000 per request.
+
+\section{Quality Evaluation}
+
+\subsection{Validation Strategy}
+
+Quality was evaluated primarily through \textbf{automated validation}, not a separate evaluation LLM or formal human annotation:
+
+\begin{itemize}
+\item \textbf{Validator (\texttt{validate\_triples.py})}: Checks
+  \begin{itemize}
+  \item RDF/Turtle syntax
+  \item Ontology domain/range constraints
+  \item Speech \texttt{containsLine} coverage
+  \item Incomplete Greek (hyphens, mid-word fragments)
+  \item Translation fragments (e.g., text starting with ``Than'', ``And'', ``But'')
+  \item Redundant line numbers in \texttt{:text}
+  \end{itemize}
+\item \textbf{No separate evaluation LLM}: Validation is rule-based (ontology + custom checks), not LLM-based.
+\item \textbf{Human oversight}: Cursor Composer 1.5 was used to apply validator-reported fixes and to catch additional standards violations.
+\end{itemize}
+
+\subsection{Issues Encountered and Resolutions}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llp{6cm}}
+\toprule
+\textbf{Category} & \textbf{Example} & \textbf{Resolution} \\
+\midrule
+Incomplete Greek & \texttt{Line\_790}: ``πων'' (mid-word) & Joined fragments in source \texttt{aGR\_*.txt}; updated triples \\
+Hyphenated fragments & \texttt{Line\_810}: ``παγ-'' & Reconstructed full word \texttt{παγκοίτας} \\
+Speech mismatch & \texttt{Speech\_Chorus\_775\_805} spans 775--805 but chorus speaks 785--805 & Renamed to \texttt{Speech\_Chorus\_785\_805} \\
+Translation fragment & \texttt{TV\_Line\_928\_en}: ``Than I have suffered...'' & Combined lines 927--928 in source; full sentence in TV \\
+Redundant line numbers & \texttt{:text "... 875"} & Removed; \texttt{:lineNumber} used instead \\
+\bottomrule
+\end{tabular}
+\caption{Representative issues and fixes}
+\end{table}
+
+\subsection{Statistics}
+
+\begin{itemize}
+\item \textbf{Verse ranges processed}: 5 (773--805, 806--822, 823--871, 872--928, 929--965)
+\item \textbf{Output files}: 19 triple files (output.ttl per language + triples\_*.ttl where applicable)
+\item \textbf{Final validation}: All 19 files pass validation (exit code 0)
+\item \textbf{Remaining warnings}: $\sim$20 semantic warnings (e.g., Greek lines ending with comma, verse continuation)---informational, not errors
+\item \textbf{Languages}: Ancient Greek (canonical), English (\texttt{en}), Modern Greek (\texttt{ell})
+\end{itemize}
+
+\section{Prompts Used}
+
+The full prompts are in \texttt{Context/Prompt\_canonical.txt} and \texttt{Context/Prompt\_translations.txt}. Key excerpts:
+
+\subsection{Canonical Prompt}
+
+The canonical prompt instructs the LLM to extract structural elements (\texttt{:Scene}, \texttt{:Speech}, \texttt{:Line\_\#\#\#}), semantic content (motivations, emotions, conflicts, themes), and to reconstruct complete verses from hyphenated fragments. Critical rules include:
+\begin{itemize}
+\item Extract canonical line numbers from the Ancient Greek text
+\item DO NOT create any \texttt{:TranslationVariant} individuals
+\item CRITICAL---COMPLETE VERSE RECONSTRUCTION: never create a \texttt{:Line\_\#\#\#} with incomplete text ending in hyphens
+\item Speech containsLine coverage: must list \texttt{:containsLine} for every \texttt{:Line\_N} where N is in [START, END]
+\item The \texttt{:text} property must contain only the Greek verse text; never append the line number to \texttt{:text}
+\end{itemize}
+
+\subsection{Translation Prompt}
+
+The translation prompt restricts output to \texttt{:TranslationVariant} individuals only:
+\begin{itemize}
+\item ONLY create \texttt{:TranslationVariant} individuals (\texttt{TV\_*})
+\item DO NOT create or redefine any canonical individuals
+\item The \texttt{:text} on each TranslationVariant must be the complete translation; never output a fragment that starts mid-sentence
+\item Never create TranslationVariants whose \texttt{:text} starts with ``Than'', ``And'', ``But'', ``So'', or other mid-sentence fragments
+\item Do not append the line number to the translation \texttt{:text}
+\end{itemize}
+
+\section{Conclusion}
+
+The pipeline successfully produced ontology-compliant RDF triples for Antigone verses 773--965 from three source texts. Iterative prompt refinement, automated validation, and AI-assisted correction (Composer 1.5) were essential to reach a fully valid output. The separation of canonical and translation prompts, combined with explicit verse-reconstruction and property-constraint rules, proved effective in reducing errors.
+
+\end{document}
