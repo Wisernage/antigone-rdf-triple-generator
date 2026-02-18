@@ -5,11 +5,13 @@ This program automates the extraction of RDF/Turtle triples from Antigone verse 
 ## Features
 
 - Automatically scans for verse ranges in the `[PRODUCTIONS]` directory
-- Reads both ancient Greek and English text files
+- Reads ancient Greek, English, and modern Greek text files
+- Two-stage pipeline: canonical triples from ancient Greek (aGR), then translation variants (TV) for English and modern Greek
 - Uses ChatGPT API to generate RDF/Turtle triples following the Antigone ontology
-- Saves output files in the correct directory structure
+- Saves output files per language: `ancient_greek/output.ttl`, `english/output.ttl`, `modern_greek/output.ttl`
 - Supports processing individual verse ranges or all ranges at once
 - Skips existing output files by default (configurable)
+- Optional validation of generated files against the ontology
 
 ## Setup
 
@@ -40,7 +42,11 @@ OPENAI_API_KEY=your_api_key_here
 
 Alternatively, set it as an environment variable:
 ```bash
+# Linux/macOS
 export OPENAI_API_KEY=your_api_key_here
+
+# Windows (PowerShell)
+$env:OPENAI_API_KEY="your_api_key_here"
 ```
 
 ## Usage
@@ -51,7 +57,7 @@ export OPENAI_API_KEY=your_api_key_here
 python antigone_triple_generator.py
 ```
 
-**Note:** Both `[PRODUCTIONS]` directory and `Prompt.txt` should be in the root folder of the project.
+**Note:** The `[PRODUCTIONS]` directory and `Context/` folder (with prompts, ontology, and demo) should be in the project root.
 
 ### Process a Specific Verse Range
 
@@ -62,13 +68,17 @@ python antigone_triple_generator.py --verse-range verse_773_to_805
 ### Command Line Options
 
 - `--productions-dir`: Path to the [PRODUCTIONS] directory (default: `[PRODUCTIONS]`)
-- `--prompt-template`: Path to the prompt template file (default: `Prompt.txt`)
+- `--canonical-prompt`: Path to the canonical prompt template (default: `Context/Prompt_canonical.txt`)
+- `--translation-prompt`: Path to the translation prompt template (default: `Context/Prompt_translations.txt`)
+- `--ontology`: Path to the ontology file (default: `Context/Ontology.ttl`)
+- `--demo`: Path to the demo example file (default: `Context/demo_grc.ttl`)
 - `--api-key`: OpenAI API key (default: reads from `OPENAI_API_KEY` environment variable)
 - `--model`: OpenAI model to use (default: `gpt-5.2`). Options: `gpt-5.2` (Thinking), `gpt-5.2-pro` (Pro), `gpt-5.2-chat-latest` (Instant)
 - `--temperature`: Sampling temperature (default: `0.3`)
 - `--max-tokens`: Maximum tokens in response (default: `4000`)
 - `--no-skip-existing`: Overwrite existing output files
 - `--verse-range`: Process only a specific verse range
+- `--no-validate`: Skip validation of generated output files
 
 ### Examples
 
@@ -80,35 +90,48 @@ python antigone_triple_generator.py --model gpt-5.2-pro
 python antigone_triple_generator.py --verse-range verse_773_to_805 --no-skip-existing
 
 # Use custom paths
-python antigone_triple_generator.py --productions-dir /path/to/productions --prompt-template /path/to/template.txt
+python antigone_triple_generator.py --productions-dir /path/to/productions --canonical-prompt Context/Prompt_canonical.txt --translation-prompt Context/Prompt_translations.txt
 ```
 
 ## Output
 
-Output files are saved in the same directory as the input files:
+Output files are saved per language in each verse range directory:
 ```
-[PRODUCTIONS]/verse_XXX_to_YYY/triples_XXX_to_YYY.ttl
+[PRODUCTIONS]/verse_XXX_to_YYY/ancient_greek/output.ttl   (canonical triples from aGR)
+[PRODUCTIONS]/verse_XXX_to_YYY/english/output.ttl         (canonical + English TranslationVariants)
+[PRODUCTIONS]/verse_XXX_to_YYY/modern_greek/output.ttl    (canonical + Modern Greek TranslationVariants)
 ```
 
 For example:
-- `[PRODUCTIONS]/verse_773_to_805/triples_773_to_805.ttl`
+- `[PRODUCTIONS]/verse_773_to_805/ancient_greek/output.ttl`
+- `[PRODUCTIONS]/verse_773_to_805/english/output.ttl`
+- `[PRODUCTIONS]/verse_773_to_805/modern_greek/output.ttl`
 
 ## Directory Structure
 
-The program expects the following structure (with `[PRODUCTIONS]` and `Prompt.txt` in the root folder):
+The program expects the following structure:
 ```
 project_root/
   [PRODUCTIONS]/
     verse_773_to_805/
       ancient_greek/
         aGR_773_to_805.txt
+        output.ttl  (generated)
       english/
-        en_773_to_805.txt
-      triples_773_to_805.ttl  (generated)
+        en_773_to_805.txt  (or aEN_773_to_805.txt)
+        output.ttl  (generated)
+      modern_greek/
+        mGR_773_to_805.txt
+        output.ttl  (generated)
     verse_806_to_822/
       ...
-  Prompt.txt  (prompt template)
+  Context/
+    Prompt_canonical.txt
+    Prompt_translations.txt
+    Ontology.ttl
+    demo_grc.ttl
   antigone_triple_generator.py
+  validate_triples.py
   requirements.txt
   ...
 ```
@@ -122,11 +145,17 @@ After generating triples, you can validate them against the ontology using the v
 python validate_triples.py
 
 # Validate a specific file
-python validate_triples.py --file [PRODUCTIONS]/verse_773_to_805/triples_773_to_805.ttl
+python validate_triples.py --file [PRODUCTIONS]/verse_773_to_805/ancient_greek/output.ttl
 
 # Show warnings in addition to errors
 python validate_triples.py --verbose
 ```
+
+Validator options:
+- `--ontology`: Path to ontology file (default: `Context/Ontology.ttl`)
+- `--file`: Validate a specific file
+- `--productions-dir`: Validate all triple files in directory (default: `[PRODUCTIONS]`)
+- `--verbose`: Show warnings in addition to errors
 
 The validator checks:
 - Property domain/range constraints (e.g., `conflictBetween` only with Character/EthicalPrinciple/Law/FateConcept)
@@ -146,7 +175,8 @@ Errors are reported to stderr, and processing continues with the next verse rang
 
 ## Notes
 
-- The program uses the prompt template from `Antigone-Prompt-Example.txt`
-- Generated triples follow the Antigone ontology defined in `1.Antigone-Ontology.ttl`
+- The program uses `Context/Prompt_canonical.txt` for canonical triples and `Context/Prompt_translations.txt` for translation variants
+- Generated triples follow the Antigone ontology defined in `Context/Ontology.ttl`
+- The validator checks both the new format (`*/output.ttl`) and legacy `triples_*.ttl` files
 - By default, existing output files are skipped to avoid unnecessary API calls
 - The `.env` file is gitignored to protect your API key
