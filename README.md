@@ -173,6 +173,10 @@ The program handles:
 
 Errors are reported to stderr, and processing continues with the next verse range if one fails.
 
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
 ## Notes
 
 - The program uses `Context/Prompt_canonical.txt` for canonical triples and `Context/Prompt_translations.txt` for translation variants
